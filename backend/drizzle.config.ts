@@ -4,4 +4,7 @@ export default {
   schema: './src/lib/db/schema/*',
   out: './src/lib/db/migrations',
   driver: 'better-sqlite',
+  dbCredentials: {
+    url: 'sqlite.db',
+  },
 } satisfies Config
