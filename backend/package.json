@@ -64,8 +64,10 @@
     "better-sqlite3": "^9.4.5",
     "cors": "^2.8.5",
     "drizzle-orm": "^0.30.7",
+    "drizzle-zod": "^0.5.1",
     "express": "^4.19.2",
     "jest-cucumber": "^3.0.1",
-    "oslo": "^1.2.0"
+    "oslo": "^1.2.0",
+    "zod": "^3.22.4"
   }
 }
