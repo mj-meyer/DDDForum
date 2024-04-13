@@ -20,5 +20,6 @@ export const insertUserSchemaParams = createInsertSchema(users).omit({
   id: true,
   password: true,
 })
+export const findUserSchemaParams = baseSchema.pick({ email: true })
 
 export type User = typeof users.$inferSelect

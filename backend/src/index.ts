@@ -5,6 +5,7 @@ import {
   users,
   insertUserSchemaParams,
   updateUserSchemaParams,
+  findUserSchemaParams,
 } from './lib/db/schema/users'
 
 import { and, eq, not, or } from 'drizzle-orm'
@@ -168,6 +169,46 @@ app.post('/users/edit/:userId', async (req: Request, res: Response) => {
 // Get a user by email
 app.get('/users', async (req: Request, res: Response) => {
   // ...
+  const emailParam = req.query.email as string
+  const validatedEmail = findUserSchemaParams.safeParse({ emailParam })
+
+  if (!validatedEmail.success) {
+    return res.status(400).json({
+      error: Errors.ValidationError,
+      data: undefined,
+      success: false,
+    })
+  }
+
+  try {
+    const email = validatedEmail.data.email
+    const user = db.select().from(users).where(eq(users.email, email)).get()
+
+    if (!user) {
+      return res.status(404).json({
+        error: Errors.UserNotFound,
+        data: undefined,
+        success: false,
+      })
+    }
+
+    // extract the password
+    const { password, ...userWithoutPassword } = user
+
+    return res.status(200).json({
+      error: undefined,
+      data: userWithoutPassword,
+      success: true,
+    })
+  } catch (error) {
+    console.log(error)
+    // Return a failure error response
+    return res.status(500).json({
+      error: Errors.ServerError,
+      data: undefined,
+      success: false,
+    })
+  }
 })
 
 const port = process.env.PORT || 3000
