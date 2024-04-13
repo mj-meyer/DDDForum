@@ -11,11 +11,14 @@ export const users = sqliteTable('users', {
 })
 
 export const baseSchema = createSelectSchema(users)
-export const updateUserSchemaParams = createInsertSchema(users).omit({
-  password: true,
-})
+export const updateUserSchemaParams = createInsertSchema(users)
+  .omit({
+    password: true,
+  })
+  .partial()
 export const insertUserSchemaParams = createInsertSchema(users).omit({
   id: true,
+  password: true,
 })
 
 export type User = typeof users.$inferSelect

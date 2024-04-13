@@ -79,7 +79,90 @@ app.post('/users/new', async (req: Request, res: Response) => {
 
 // Edit a user
 app.post('/users/edit/:userId', async (req: Request, res: Response) => {
-  // ...
+  const id = parseInt(req.params.userId)
+  const rawUserData = req.body
+
+  const validatedUserData = updateUserSchemaParams.safeParse({
+    id,
+    ...rawUserData,
+  })
+  if (!validatedUserData.success) {
+    return res.status(400).json({
+      error: Errors.ValidationError,
+      data: undefined,
+      success: false,
+    })
+  }
+
+  const userData = validatedUserData.data
+
+  try {
+    const findUserById = db.select().from(users).where(eq(users.id, id)).get()
+    if (!findUserById) {
+      return res.status(404).json({
+        error: Errors.UserNotFound,
+        data: undefined,
+        success: false,
+      })
+    }
+
+    if (userData.email?.length) {
+      const useremail = db
+        .select()
+        .from(users)
+        .where(and(eq(users.email, userData.email), not(eq(users.id, id))))
+        .get()
+
+      if (useremail) {
+        return res.status(409).json({
+          error: Errors.EmailAlreadyInUse,
+          data: undefined,
+          success: false,
+        })
+      }
+    }
+
+    if (userData.username?.length) {
+      const username = db
+        .select()
+        .from(users)
+        .where(
+          and(eq(users.username, userData.username), not(eq(users.id, id)))
+        )
+        .get()
+
+      if (username) {
+        return res.status(409).json({
+          error: Errors.UsernameAlreadyTaken,
+          data: undefined,
+          success: false,
+        })
+      }
+    }
+
+    const [updateUser] = await db
+      .update(users)
+      .set(validatedUserData.data)
+      .where(eq(users.id, id))
+      .returning()
+
+    // extract the password
+    const { password, ...userWithoutPassword } = updateUser ?? {}
+
+    return res.status(201).json({
+      error: undefined,
+      data: userWithoutPassword,
+      succes: true,
+    })
+  } catch (error) {
+    console.log(error)
+    // Return a failure error response
+    return res.status(500).json({
+      error: Errors.ServerError,
+      data: undefined,
+      success: false,
+    })
+  }
 })
 
 // Get a user by email
