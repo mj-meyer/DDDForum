@@ -1,3 +1,18 @@
 # Code-First
 
-> This is where you'll write your code-first implementation of the User Story from DDDForum. You can [see the assignment page for more details](https://www.essentialist.dev/products/the-software-essentialist/categories/2153149734/posts/2168948146).
+This is my code first implementation. It's raw, doesn't use a lot of abstraction and just gets the job done.
+
+## Running the app
+
+Before running you'll want to run the following to generate a sql db and get the schema created:
+
+```shell
+yarn db:generate
+yarn db:push
+```
+
+To start the app, you can run:
+
+```shell
+yarn start:dev
+```
