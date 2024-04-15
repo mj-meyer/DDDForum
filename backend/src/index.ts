@@ -8,7 +8,7 @@ import {
   findUserSchemaParams,
 } from './lib/db/schema/users'
 
-import { and, eq, not, or } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { Errors } from './lib/util/errors'
 import { alphabet, generateRandomString } from 'oslo/crypto'
 
@@ -27,18 +27,14 @@ app.post('/users/new', async (req: Request, res: Response) => {
       success: false,
     })
   }
-
   try {
-    const existingUser = db
-      .select()
-      .from(users)
-      .where(
+    const existingUser = await db.query.users.findFirst({
+      where: (user, { eq, or }) =>
         or(
-          eq(users.email, userData.email),
-          eq(users.username, userData.username)
-        )
-      )
-      .get()
+          eq(user.email, userData.email),
+          eq(user.username, userData.username)
+        ),
+    })
 
     if (existingUser) {
       const { email } = existingUser
@@ -55,12 +51,12 @@ app.post('/users/new', async (req: Request, res: Response) => {
     }
 
     const userPassword = generateRandomString(10, alphabet('a-z', '0-9'))
-    const user = await db
+    const [user] = await db
       .insert(users)
       .values({ ...userData, password: userPassword })
       .returning()
 
-    const { password, ...userWithoutPassword } = user[0] ?? {}
+    const { password, ...userWithoutPassword } = user ?? {}
 
     return res.status(201).json({
       error: undefined,
@@ -98,7 +94,9 @@ app.post('/users/edit/:userId', async (req: Request, res: Response) => {
   const userData = validatedUserData.data
 
   try {
-    const findUserById = db.select().from(users).where(eq(users.id, id)).get()
+    const findUserById = await db.query.users.findFirst({
+      where: (user, { eq }) => eq(user.id, userData.id!),
+    })
     if (!findUserById) {
       return res.status(404).json({
         error: Errors.UserNotFound,
@@ -107,14 +105,13 @@ app.post('/users/edit/:userId', async (req: Request, res: Response) => {
       })
     }
 
-    if (userData.email?.length) {
-      const useremail = db
-        .select()
-        .from(users)
-        .where(and(eq(users.email, userData.email), not(eq(users.id, id))))
-        .get()
+    if (userData.email) {
+      const emailAlreadyInUse = await db.query.users.findFirst({
+        where: (user, { eq, not }) =>
+          and(eq(user.email, userData.email!), not(eq(user.id, userData.id!))),
+      })
 
-      if (useremail) {
+      if (emailAlreadyInUse) {
         return res.status(409).json({
           error: Errors.EmailAlreadyInUse,
           data: undefined,
@@ -123,16 +120,16 @@ app.post('/users/edit/:userId', async (req: Request, res: Response) => {
       }
     }
 
-    if (userData.username?.length) {
-      const username = db
-        .select()
-        .from(users)
-        .where(
-          and(eq(users.username, userData.username), not(eq(users.id, id)))
-        )
-        .get()
+    if (userData.username) {
+      const usernameAlreadyTaken = await db.query.users.findFirst({
+        where: (user, { eq, not }) =>
+          and(
+            eq(user.username, userData.username!),
+            not(eq(user.id, userData.id!))
+          ),
+      })
 
-      if (username) {
+      if (usernameAlreadyTaken) {
         return res.status(409).json({
           error: Errors.UsernameAlreadyTaken,
           data: undefined,
@@ -168,7 +165,6 @@ app.post('/users/edit/:userId', async (req: Request, res: Response) => {
 
 // Get a user by email
 app.get('/users', async (req: Request, res: Response) => {
-  // ...
   const emailParam = req.query.email as string
   const validatedEmail = findUserSchemaParams.safeParse({ emailParam })
 
@@ -182,7 +178,9 @@ app.get('/users', async (req: Request, res: Response) => {
 
   try {
     const email = validatedEmail.data.email
-    const user = db.select().from(users).where(eq(users.email, email)).get()
+    const user = await db.query.users.findFirst({
+      where: (user, { eq }) => eq(user.email, email),
+    })
 
     if (!user) {
       return res.status(404).json({
