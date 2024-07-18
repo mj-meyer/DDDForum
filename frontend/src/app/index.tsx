@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query'
+// import { useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { RouterProvider } from 'react-router-dom'
 
@@ -6,9 +6,10 @@ import { AppProvider } from './main-provider'
 import { createRouter } from './routes'
 
 const AppRouter = () => {
-  const queryClient = useQueryClient()
+  // const queryClient = useQueryClient()
 
-  const router = useMemo(() => createRouter(queryClient), [queryClient])
+  // const router = useMemo(() => createRouter(queryClient), [queryClient])
+  const router = useMemo(() => createRouter(), [])
 
   return <RouterProvider router={router} />
 }
