@@ -2,22 +2,37 @@ import { Blocks } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Link } from '../ui/link'
 import { ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 
-const Header = () => (
-  <header className="flex justify-between items-center p-4 bg-orange-500 text-white">
-    <div className="flex items-center gap-2">
-      <Blocks />
-      <h1 className="text-xl font-bold">Domain-Driven Designers</h1>
-    </div>
-    <p className="text-sm">Where awesome Domain-Driven Designers are made</p>
-    <Button variant="outline" className="bg-black text-white hover:bg-gray-800">
-      Join
-    </Button>
-  </header>
-)
+const Header = () => {
+  const location = useLocation()
+  return (
+    <header className="flex justify-between items-center p-4 bg-orange-500 text-white">
+      <div className="flex items-center gap-3">
+        <Blocks className="size-10" />
+        <div className="flex flex-col">
+          <h1 className="text-xl font-bold">Domain-Driven Designers</h1>
+          <p className="text-xs">
+            Where awesome Domain-Driven Designers are made
+          </p>
+        </div>
+      </div>
+      {location.pathname !== '/register' && (
+        <Link to="/register">
+          <Button
+            variant="outline"
+            className="bg-black text-white border-orange-400 hover:bg-black/60 hover:text-white"
+          >
+            Join
+          </Button>
+        </Link>
+      )}
+    </header>
+  )
+}
 
 const Navigation = () => (
-  <nav className="flex space-x-4 p-4 bg-gray-100">
+  <nav className="flex space-x-4 p-4 bg-slate-100">
     <Link to="/" className="font-bold">
       Popular
     </Link>
@@ -30,13 +45,12 @@ const Navigation = () => (
   </nav>
 )
 
-// MainLayout Component
-const MainLayout = ({ children }: { children: ReactNode }) => (
-  <div className="max-w-3xl mx-auto">
-    <Header />
-    <Navigation />
-    <main className="p-4">{children}</main>
+export const MainLayout = ({ children }: { children: ReactNode }) => (
+  <div className="w-full h-full">
+    <div className="max-w-3xl mx-auto h-full">
+      <Header />
+      <Navigation />
+      <main className="p-4">{children}</main>
+    </div>
   </div>
 )
-
-export { MainLayout }
