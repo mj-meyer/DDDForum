@@ -1,6 +1,9 @@
+import { relations } from 'drizzle-orm'
 import { integer, text, sqliteTable } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { comments } from './comments'
 import { members } from './members'
+import { votes } from './votes'
 
 export const posts = sqliteTable('posts', {
   id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
@@ -15,11 +18,20 @@ export const posts = sqliteTable('posts', {
     .$defaultFn(() => new Date()),
 })
 
-export const baseSchema = createSelectSchema(posts)
+export const postsRelations = relations(posts, ({ one, many }) => ({
+  memberPostedBy: one(members, {
+    fields: [posts.memberId],
+    references: [members.id],
+  }),
+  votes: many(votes),
+  comments: many(comments),
+}))
+
+export const basePostsSchema = createSelectSchema(posts)
 export const updatePostSchemaParams = createInsertSchema(posts).partial()
 export const insertPostSchemaParams = createInsertSchema(posts).omit({
   id: true,
 })
-export const findPostSchemaParams = baseSchema.pick({ memberId: true })
+export const findPostSchemaParams = basePostsSchema.pick({ memberId: true })
 
 export type Post = typeof posts.$inferSelect
