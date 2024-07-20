@@ -8,9 +8,10 @@ import {
   findUserSchemaParams,
 } from './lib/db/schema/users'
 
-import { and, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { Errors } from './lib/util/errors'
 import { alphabet, generateRandomString } from 'oslo/crypto'
+import { posts } from './lib/db/schema/posts'
 
 const app = express()
 app.use(express.json())
@@ -201,6 +202,64 @@ app.get('/users', async (req: Request, res: Response) => {
   } catch (error) {
     console.log(error)
     // Return a failure error response
+    return res.status(500).json({
+      error: Errors.ServerError,
+      data: undefined,
+      success: false,
+    })
+  }
+})
+
+app.get('/posts', async (req: Request, res: Response) => {
+  try {
+    const { sort } = req.query
+
+    if (sort !== 'recent') {
+      return res.status(400).json({
+        error: Errors.ValidationError,
+        data: undefined,
+        success: false,
+      })
+    }
+
+    const postsWithVotes = await db.query.posts.findMany({
+      with: {
+        memberPostedBy: {
+          columns: {
+            userId: false,
+            id: false,
+          },
+          with: {
+            user: {
+              columns: {
+                password: false,
+                id: false,
+              },
+            },
+          },
+        },
+        votes: {
+          columns: {
+            postId: false,
+          },
+        },
+        comments: {
+          columns: {
+            postId: false,
+          },
+        },
+      },
+      orderBy: [desc(posts.dateCreated)],
+    })
+
+    return res.status(200).json({
+      error: undefined,
+      data: { posts: postsWithVotes },
+      success: true,
+    })
+  } catch (error) {
+    console.log(error)
+
     return res.status(500).json({
       error: Errors.ServerError,
       data: undefined,
