@@ -2,6 +2,7 @@ import Axios, { InternalAxiosRequestConfig } from 'axios'
 
 import { toast } from 'sonner'
 import { env } from '@/config/env'
+import { ErrorMessages, ServerErrors } from './api-error-messages'
 
 function authRequestInterceptor(config: InternalAxiosRequestConfig) {
   if (config.headers) {
@@ -22,8 +23,9 @@ api.interceptors.response.use(
     return response.data.data
   },
   error => {
-    const message = error.response?.data?.message || error.message
-    toast.error(message)
+    const message = error.response?.data?.error || error.message
+
+    toast.error(ErrorMessages[message as ServerErrors] || 'An error occurred')
 
     if (error.response?.status === 401) {
       const searchParams = new URLSearchParams()
