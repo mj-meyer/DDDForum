@@ -7,7 +7,6 @@
 
 export type BaseEntity = {
   id: string
-  createdAt: number
 }
 
 export type Entity<T> = {
@@ -26,3 +25,27 @@ export type AuthResponse = {
   jwt: string
   data: User
 }
+
+export type Vote = Entity<{
+  memberId: string
+  voteType: 'Upvote' | 'Downvote'
+}>
+
+export type Comment = Entity<{
+  memberId: string
+  text: string
+  parentCommentId: string | null
+}>
+
+export type Post = Entity<{
+  memberId: string
+  postType: 'text' | 'link'
+  title: string
+  content: string
+  dateCreated: string
+  memberPostedBy: {
+    user: Omit<User, 'id'>
+  }
+  votes: Array<Vote>
+  comments: Array<Comment>
+}>
